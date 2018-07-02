@@ -3,8 +3,8 @@
 
 #include <memory>
 #include <vector>
-#include "PolygonData.hxx"
-#include "ConstraintData.hxx"
+#include "PolygonData.hpp"
+#include "ConstraintData.hpp"
 
 struct PrimitiveData
 {

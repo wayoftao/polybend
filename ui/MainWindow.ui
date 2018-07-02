@@ -65,7 +65,7 @@
   <customwidget>
    <class>DisplayWidget</class>
    <extends>QOpenGLWidget</extends>
-   <header>DisplayWidget.hxx</header>
+   <header>DisplayWidget.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>

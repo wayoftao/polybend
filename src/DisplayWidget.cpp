@@ -1,4 +1,4 @@
-#include "DisplayWidget.hxx"
+#include "DisplayWidget.hpp"
 
 #include <QOpenGLFunctions>
 

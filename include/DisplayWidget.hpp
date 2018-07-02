@@ -3,7 +3,7 @@
 
 #include <QOpenGLWidget>
 #include <memory>
-#include "PrimitiveData.hxx"
+#include "PrimitiveData.hpp"
 
 class DisplayWidget : public QOpenGLWidget
 {

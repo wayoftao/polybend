@@ -36,5 +36,5 @@ Makefile
 
 # Cmake
 CMakeFiles/*
-CMakeLists.txt*
+CMakeLists.txt.*
 *.cmake

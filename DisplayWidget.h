@@ -7,7 +7,7 @@
 
 class DisplayWidget : public QOpenGLWidget
 {
-    Q_OBJECT;
+    Q_OBJECT
     public:
         DisplayWidget(QWidget* parent);
 

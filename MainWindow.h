@@ -1,18 +1,17 @@
 #ifndef MAINWINDOW_H_INCLUDED
 #define MAINWINDOW_H_INCLUDED
 
-#include <memory>
 #include <QMainWindow>
+#include "ui_MainWindow.h"
 
 class MainWindow : public QMainWindow
 {
-    Q_OBJECT;
-    public:
+    Q_OBJECT
+public:
         MainWindow();
-        bool poll();
-        void update();
 
-    private:
+private:
+        Ui::MainWindow _ui;
 };
 
 #endif

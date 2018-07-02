@@ -3,7 +3,7 @@
 
 #include <QOpenGLWidget>
 #include <memory>
-#include "PrimitiveData.h"
+#include "PrimitiveData.hxx"
 
 class DisplayWidget : public QOpenGLWidget
 {
@@ -15,7 +15,7 @@ class DisplayWidget : public QOpenGLWidget
         void resizeGL(int w, int h);
         void paintGL();
 
-        void set_display_data(std::shared_ptr<PrimitiveData> data);
+		void setDisplayData(const PrimitiveData::Ptr& data) { _data = data; }
 
     private:
         std::shared_ptr<PrimitiveData> _data;

@@ -8,8 +8,8 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 find_package(Qt5Core)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-file(GLOB SOURCES *.cpp)
-file(GLOB HEADERS *.h)
+file(GLOB SOURCES *.cxx)
+file(GLOB HEADERS *.hxx)
 
 add_executable(polybend ${SOURCES} ${HEADERS})
 

@@ -2,17 +2,36 @@
 
 #include <QOpenGLFunctions>
 #include <GL/gl.h>
+#include <climits>
+#include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include "xorwow.hpp"
 
 DisplayWidget::DisplayWidget(QWidget* parent)
 	: QOpenGLWidget(parent)
+    , _randState{3256, 3542, 23457, 2102030, 2}
 {
 }
 
 void DisplayWidget::initializeGL()
 {
+    nextColor();
+
 	auto* f = QOpenGLContext::currentContext()->functions();
 
 	// Initialize buffers and shaders
+
+    // SHADER
+    auto* prog = new QOpenGLShaderProgram(this);
+    prog->create();
+    prog->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, ":/glsl/default.v.glsl");
+    prog->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, ":/glsl/default.f.glsl");
+    prog->link();
+    _glData.shaderPrograms["default"] = prog;
+    assert(prog->isLinked());
+    prog->bind();
 
     // POLYGON VAO
     auto* polygonVAO = new QOpenGLVertexArrayObject(this);
@@ -25,60 +44,90 @@ void DisplayWidget::initializeGL()
     polygonVBO->setUsagePattern(QOpenGLBuffer::StreamDraw);
     _glData.VBOs["polygons"] = polygonVBO;
     polygonVBO->bind();
-    f->glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), nullptr); // TODO: Check stride
-	f->glEnableVertexAttribArray(0);
+
+    prog->enableAttributeArray(0);
+    prog->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(Vertex));
+    prog->enableAttributeArray(1);
+    prog->setAttributeBuffer(1, GL_FLOAT, sizeof(Vertex::position), 3, sizeof(Vertex));
+
     polygonVAO->release();
 
     // POINT VAO
     auto* pointVAO = new QOpenGLVertexArrayObject(this);
-    pointVAO->create();
     _glData.VAOs["points"] = pointVAO;
+    pointVAO->create();
     pointVAO->bind();
 
     auto* pointVBO = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+    _glData.VBOs["points"] = pointVBO;
     pointVBO->create();
     pointVBO->setUsagePattern(QOpenGLBuffer::DynamicDraw);
-    _glData.VBOs["points"] = pointVBO;
-    f->glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(Vertex), nullptr);
-    f->glEnableVertexAttribArray(0);
+    pointVBO->bind();
+
+    prog->enableAttributeArray(0);
+    prog->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(Vertex));
+    prog->enableAttributeArray(1);
+    prog->setAttributeBuffer(1, GL_FLOAT, sizeof(Vertex::position), 3, sizeof(Vertex));
+
     pointVAO->release();
 
-    // SHADER
-	auto* prog = new QOpenGLShaderProgram(this);
-	prog->create();
-    prog->addCacheableShaderFromSourceFile(QOpenGLShader::Vertex, ":/glsl/default.v.glsl");
-    prog->addCacheableShaderFromSourceFile(QOpenGLShader::Fragment, ":/glsl/default.f.glsl");
-	prog->link();
-    _glData.shaderPrograms["default"] = prog;
-
-     f->glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+    // OTHER SETUP
+    f->glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+    f->glEnable(GL_PROGRAM_POINT_SIZE);
 }
 
 void DisplayWidget::resizeGL(int w, int h)
 {
+    std::cout << "DisplayWidget::resizeGL()" << std::endl;
+
 	auto* f = QOpenGLContext::currentContext()->functions();
 	f->glViewport(0, 0, w, h);
+    _width = w;
+    _height = h;
 }
 
 void DisplayWidget::paintGL()
 {
+    std::cout << "DisplayWidget::paintGL()" << std::endl;
+
 	auto* f = QOpenGLContext::currentContext()->functions();
 	f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto* prog = _glData.shaderPrograms["default"];
     prog->bind();
 
-    // Bind buffers and draw
-    auto* vao = _glData.VAOs["polygons"];
-	vao->bind();
-    // DRAW
-    vao = _glData.VAOs["points"];
-    vao->bind();
-    // DRAW
+    QMatrix4x4 mvp;
+    mvp.setToIdentity();
+    mvp.ortho(0.0f, (float)_width, (float)_height, 0.0f, 1.0f, -1.0f);
+    prog->setUniformValue("MVP", mvp);
+
+    // DRAW POINTS
+    auto* pointVAO = _glData.VAOs["points"];
+    pointVAO->bind();
+    f->glDrawArrays(GL_POINTS, 0, _currentPolygon.size());
+    pointVAO->release();
+
+    // DRAW POLYGONS
+    if (!_om)
+    {
+        return;
+    }
+    auto data = _om->getData();
+    auto* polygonVAO = _glData.VAOs["polygons"];
+    polygonVAO->bind();
+    int position = 0;
+    for (const auto& poly : data->polygons)
+    {
+        f->glDrawArrays(GL_TRIANGLE_STRIP, position, poly.points.size());
+        position += poly.points.size();
+    }
+    polygonVAO->release();
 }
 
 void DisplayWidget::updatePolygons()
 {
+    std::cout << "DisplayWidget::updatePolygons()" << std::endl;
+
     if (!_om)
     {
         return;
@@ -88,34 +137,37 @@ void DisplayWidget::updatePolygons()
     auto data = _om->getData();
 
     size_t totalSize = 0;
+    size_t pointCount = 0;
     for (const auto& poly : data->polygons)
     {
-        totalSize += (poly.points.size() * sizeof(Vertex));
+        pointCount += poly.points.size();
     }
+    totalSize = pointCount * sizeof(Vertex);
 
     if (totalSize == 0)
     {
         return;
     }
 
-    auto* polyGonVBO = _glData.VBOs["polygons"];
-    polyGonVBO->bind();
-    polyGonVBO->allocate(totalSize);
+    auto* polygonVBO = _glData.VBOs["polygons"];
+    polygonVBO->bind();
+    polygonVBO->allocate(totalSize);
     size_t written = 0;
     for (const auto& poly : data->polygons)
     {
         size_t writeSize = poly.points.size() * sizeof(Vertex);
-        polyGonVBO->write(written,
+        polygonVBO->write(written,
                           poly.points.data(),
                           writeSize);
         written += writeSize;
     }
     assert(written == totalSize);
-    polyGonVBO->release();
 }
 
 void DisplayWidget::updatePoints()
 {
+    std::cout << "DisplayWidget::updatePoints()" << std::endl;
+
     if (!_currentPolygon.empty())
     {
         auto* pointVBO = _glData.VBOs["points"];
@@ -128,5 +180,50 @@ void DisplayWidget::updatePoints()
 
 void DisplayWidget::mousePressEvent(QMouseEvent* event)
 {
-    updatePoints();
+    switch (event->button())
+    {
+    case Qt::LeftButton:
+        {
+            const auto& pos = event->localPos();
+            Vertex v;
+            v.position = {(float)pos.x(), (float)pos.y(), 0.0f};
+            v.color = _color;
+            _currentPolygon.push_back(v);
+
+            std::cout << "currentPolygon:" << std::endl;
+            for (const auto& w : _currentPolygon)
+            {
+                std::cout << w.position.x << ", " << w.position.y << std::endl;
+            }
+            updatePoints();
+        }
+        break;
+
+    case Qt::RightButton:
+        {
+            if (!_currentPolygon.empty() && _om)
+            {
+                auto data = _om->getData();
+                data->polygons.push_back(PolygonData{_currentPolygon}); // CHECK MOVE SEMANTICS
+                nextColor();
+                _currentPolygon.clear();
+                updatePolygons();
+                updatePoints();
+            }
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    update();
+}
+
+void DisplayWidget::nextColor()
+{
+    float r = std::max((float)(xorwow(_randState)) / (float)(UINT32_MAX), 0.3f);
+    float g = std::max((float)(xorwow(_randState)) / (float)(UINT32_MAX), 0.3f);
+    float b = std::max((float)(xorwow(_randState)) / (float)(UINT32_MAX), 0.3f);
+    _color = {r,g,b};
 }

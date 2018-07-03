@@ -2,6 +2,7 @@
 #define DISPLAYWIDGET_HPP
 
 #include <QOpenGLWidget>
+#include <QMouseEvent>
 #include <memory>
 #include "ObjectManager.hpp"
 #include "PrimitiveData.hpp"
@@ -26,9 +27,16 @@ class DisplayWidget : public QOpenGLWidget
         void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 
 	private:
+        void nextColor();
+
 		GLData _glData;
         std::vector<Vertex> _currentPolygon;
         ObjectManager* _om;
+        uint32_t _randState[5];
+        glm::vec3 _color;
+        unsigned int _width;
+        unsigned int _height;
+
 };
 
 #endif

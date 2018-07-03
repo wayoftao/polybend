@@ -1,9 +1,10 @@
-#ifndef DISPLAYWIDGET_H_INCLUDED
-#define DISPLAYWIDGET_H_INCLUDED
+#ifndef DISPLAYWIDGET_HPP
+#define DISPLAYWIDGET_HPP
 
 #include <QOpenGLWidget>
 #include <memory>
-#include "PrimitiveData.h"
+#include "PrimitiveData.hpp"
+#include "GLData.hpp"
 
 class DisplayWidget : public QOpenGLWidget
 {
@@ -15,10 +16,10 @@ class DisplayWidget : public QOpenGLWidget
         void resizeGL(int w, int h);
         void paintGL();
 
-        void set_display_data(std::shared_ptr<PrimitiveData> data);
+		void updateData(PrimitiveData::PtrRef data);
 
-    private:
-        std::shared_ptr<PrimitiveData> _data;
+	private:
+		GLData _glData;
 };
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef POLYGONDATA_H_INCLUDED
-#define POLYGONDATA_H_INCLUDED
+#ifndef POLYGONDATA_HPP
+#define POLYGONDATA_HPP
 
 #include <vector>
 #include <glm/vec3.hpp>

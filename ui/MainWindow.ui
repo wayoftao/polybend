@@ -31,7 +31,7 @@
      <x>0</x>
      <y>0</y>
      <width>750</width>
-     <height>28</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -65,7 +65,7 @@
   <customwidget>
    <class>DisplayWidget</class>
    <extends>QOpenGLWidget</extends>
-   <header>DisplayWidget.h</header>
+   <header>DisplayWidget.hpp</header>
   </customwidget>
  </customwidgets>
  <resources/>

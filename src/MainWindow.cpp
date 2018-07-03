@@ -1,5 +1,5 @@
-#include "MainWindow.h"
-#include "ui_MainWindow.h"
+#include "MainWindow.hpp"
+#include "../ui/ui_MainWindow.h"
 
 MainWindow::MainWindow()
     : _ui(Ui::MainWindow())

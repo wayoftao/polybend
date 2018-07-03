@@ -2,12 +2,11 @@
 #define POLYGONDATA_HPP
 
 #include <vector>
-#include <glm/vec3.hpp>
+#include "Vertex.hpp"
 
 struct PolygonData
 {
-    std::vector<glm::dvec3> points;
-    glm::vec3 color;
+    std::vector<Vertex> points;
     // TODO: Mesh
 };
 

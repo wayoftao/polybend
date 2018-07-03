@@ -1,8 +1,9 @@
 #include "MainWindow.hpp"
 #include "../ui/ui_MainWindow.h"
 
-MainWindow::MainWindow()
+MainWindow::MainWindow(ObjectManager* om)
     : _ui(Ui::MainWindow())
+    , _om(om)
 {
     QSurfaceFormat format;
     format.setDepthBufferSize(24);
@@ -12,4 +13,5 @@ MainWindow::MainWindow()
     QSurfaceFormat::setDefaultFormat(format);
 
     _ui.setupUi(this);
+    _ui.displayWidget->setObjectManager(om);
 }

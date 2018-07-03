@@ -4,7 +4,8 @@
 int main(int argc, char** argv)
 {
     QApplication polybend(argc, argv);
-    MainWindow mw;
+    ObjectManager om;
+    MainWindow mw(&om);
     mw.show();
     return polybend.exec();
 }

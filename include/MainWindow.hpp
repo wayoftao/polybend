@@ -3,15 +3,17 @@
 
 #include <QMainWindow>
 #include "../ui/ui_MainWindow.h"
+#include "ObjectManager.hpp"
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-        MainWindow();
+        MainWindow(ObjectManager* om);
 
 private:
         Ui::MainWindow _ui;
+        ObjectManager* _om;
 };
 
 #endif

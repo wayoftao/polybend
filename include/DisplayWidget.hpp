@@ -3,8 +3,10 @@
 
 #include <QOpenGLWidget>
 #include <memory>
+#include "ObjectManager.hpp"
 #include "PrimitiveData.hpp"
 #include "GLData.hpp"
+#include "Vertex.hpp"
 
 class DisplayWidget : public QOpenGLWidget
 {
@@ -12,14 +14,21 @@ class DisplayWidget : public QOpenGLWidget
     public:
         DisplayWidget(QWidget* parent);
 
-        void initializeGL();
-        void resizeGL(int w, int h);
-        void paintGL();
+        void initializeGL() Q_DECL_OVERRIDE;
+        void resizeGL(int w, int h) Q_DECL_OVERRIDE;
+        void paintGL() Q_DECL_OVERRIDE;
 
-		void updateData(PrimitiveData::PtrRef data);
+        void setObjectManager(ObjectManager* om) { _om = om; }
+        void updatePolygons();
+        void updatePoints();
+
+    protected:
+        void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
 
 	private:
 		GLData _glData;
+        std::vector<Vertex> _currentPolygon;
+        ObjectManager* _om;
 };
 
 #endif

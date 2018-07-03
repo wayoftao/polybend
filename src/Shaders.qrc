@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource>
+        <file>glsl/default.v.glsl</file>
+        <file>glsl/default.f.glsl</file>
+    </qresource>
+</RCC>

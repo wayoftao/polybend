@@ -8,6 +8,7 @@
 #include "PrimitiveData.hpp"
 #include "GLData.hpp"
 #include "Vertex.hpp"
+#include "triangulate.hpp"
 
 class DisplayWidget : public QOpenGLWidget
 {
@@ -33,10 +34,9 @@ class DisplayWidget : public QOpenGLWidget
         std::vector<Vertex> _currentPolygon;
         ObjectManager* _om;
         uint32_t _randState[5];
-        glm::vec3 _color;
+        glm::vec3 _currentColor;
         unsigned int _width;
         unsigned int _height;
-
 };
 
 #endif

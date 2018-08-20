@@ -46,7 +46,7 @@ void DisplayWidget::initializeGL()
     polygonVBO->bind();
 
     prog->enableAttributeArray(0);
-    prog->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(Vertex));
+    prog->setAttributeBuffer(0, GL_FLOAT, 0, 2, sizeof(Vertex));
     prog->enableAttributeArray(1);
     prog->setAttributeBuffer(1, GL_FLOAT, sizeof(Vertex::position), 3, sizeof(Vertex));
 
@@ -65,7 +65,7 @@ void DisplayWidget::initializeGL()
     pointVBO->bind();
 
     prog->enableAttributeArray(0);
-    prog->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(Vertex));
+    prog->setAttributeBuffer(0, GL_FLOAT, 0, 2, sizeof(Vertex));
     prog->enableAttributeArray(1);
     prog->setAttributeBuffer(1, GL_FLOAT, sizeof(Vertex::position), 3, sizeof(Vertex));
 
@@ -101,27 +101,28 @@ void DisplayWidget::paintGL()
     mvp.ortho(0.0f, (float)_width, (float)_height, 0.0f, 1.0f, -1.0f);
     prog->setUniformValue("MVP", mvp);
 
+
+
+    // DRAW POLYGONS
+    if (_om)
+    {
+        auto data = _om->getData();
+        auto* polygonVAO = _glData.VAOs["polygons"];
+        polygonVAO->bind();
+        int position = 0;
+        for (const auto& poly : data->polygons)
+        {
+            f->glDrawArrays(GL_TRIANGLE_STRIP, position, poly.points.size());
+            position += poly.points.size();
+        }
+        polygonVAO->release();
+    }
+
     // DRAW POINTS
     auto* pointVAO = _glData.VAOs["points"];
     pointVAO->bind();
     f->glDrawArrays(GL_POINTS, 0, _currentPolygon.size());
     pointVAO->release();
-
-    // DRAW POLYGONS
-    if (!_om)
-    {
-        return;
-    }
-    auto data = _om->getData();
-    auto* polygonVAO = _glData.VAOs["polygons"];
-    polygonVAO->bind();
-    int position = 0;
-    for (const auto& poly : data->polygons)
-    {
-        f->glDrawArrays(GL_TRIANGLE_STRIP, position, poly.points.size());
-        position += poly.points.size();
-    }
-    polygonVAO->release();
 }
 
 void DisplayWidget::updatePolygons()
@@ -186,8 +187,8 @@ void DisplayWidget::mousePressEvent(QMouseEvent* event)
         {
             const auto& pos = event->localPos();
             Vertex v;
-            v.position = {(float)pos.x(), (float)pos.y(), 0.0f};
-            v.color = _color;
+            v.position = {(float)pos.x(), (float)pos.y()};
+            v.color = _currentColor;
             _currentPolygon.push_back(v);
 
             std::cout << "currentPolygon:" << std::endl;
@@ -204,7 +205,14 @@ void DisplayWidget::mousePressEvent(QMouseEvent* event)
             if (!_currentPolygon.empty() && _om)
             {
                 auto data = _om->getData();
-                data->polygons.push_back(PolygonData{_currentPolygon}); // CHECK MOVE SEMANTICS
+                std::vector<glm::vec2> input(_currentPolygon.size());
+                std::vector<glm::vec2> mesh;
+                for (const auto& v : _currentPolygon)
+                {
+                    input.push_back(v.position);
+                }
+                Triangulate::process(input, mesh);
+                data->polygons.push_back(PolygonData{_currentPolygon, mesh}); // CHECK MOVE SEMANTICS
                 nextColor();
                 _currentPolygon.clear();
                 updatePolygons();
@@ -225,5 +233,5 @@ void DisplayWidget::nextColor()
     float r = std::max((float)(xorwow(_randState)) / (float)(UINT32_MAX), 0.3f);
     float g = std::max((float)(xorwow(_randState)) / (float)(UINT32_MAX), 0.3f);
     float b = std::max((float)(xorwow(_randState)) / (float)(UINT32_MAX), 0.3f);
-    _color = {r,g,b};
+    _currentColor = {r,g,b};
 }

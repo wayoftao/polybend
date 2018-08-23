@@ -1,8 +1,6 @@
 #ifndef GLDATA_HPP
 #define GLDATA_HPP
 
-#include <GL/gl.h>
-#include <unordered_map>
 #include <QOpenGLBuffer>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShader>

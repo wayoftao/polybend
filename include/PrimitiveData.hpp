@@ -9,8 +9,8 @@
 struct PrimitiveData
 {
     typedef std::shared_ptr<PrimitiveData> Ptr;
-    typedef const Ptr& PtrRef;
-    std::vector<PolygonData>  polygons;
+
+    std::vector<PolygonData>    polygons;
     std::vector<ConstraintData> constraints;
 };
 

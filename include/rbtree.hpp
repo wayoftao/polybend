@@ -1,7 +1,14 @@
 #ifndef __RBTREE_H__
 #define __RBTREE_H__
 
-#include <assert.h>
+/*
+ * Original code by Masayoshi Mizutani (github.com/m-mizutani)
+ * taken from https://gist.github.com/m-mizutani/1135351 with
+ * suggested fix by Donghan Miao (github.com/miaodonghan).
+ */
+
+
+#include <cassert>
 #include <string>
 
 #ifdef DEBUG

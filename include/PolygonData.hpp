@@ -8,10 +8,10 @@
 
 struct PolygonData
 {
-    typedef std::shared_ptr<PolygonData> ptr;
+    typedef std::shared_ptr<PolygonData> Ptr;
 
     std::vector<Vertex> points;
-    std::vector<int> mesh;
+    std::vector<int>    mesh;
 };
 
 #endif

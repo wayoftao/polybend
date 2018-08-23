@@ -1,7 +1,9 @@
 #include "Triangulator.hpp"
 
+#define DEBUG
 #include <tuple>
 #include "rbtree.hpp"
+#undef DEBUG
 
 std::vector<int> Triangulator::triangulate(const std::vector<glm::vec2>& points)
 {

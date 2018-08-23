@@ -12,7 +12,7 @@
 #include <optional>
 
 #ifdef DEBUG
-#include "debug.h"
+#include <cstdio>
 #endif
 
 template<typename K, typename T> class RBTree
@@ -40,7 +40,7 @@ private:
         }
     public:
         RBTreeNode(K k, const T& o, RBTree* t) :
-            _obj(std::make_optional<T>(o)), _key(k), _color(RED), _parent(nullptr), _tree(t)
+            _obj(std::make_optional<T>(o)), _key(std::make_optional<K>(k)), _color(RED), _parent(nullptr), _tree(t)
         {
             _link[LEFT]  = RBTree<K,T>::nil;
             _link[RIGHT] = RBTree<K,T>::nil;
@@ -487,7 +487,10 @@ private:
             if (isRed() &&
                     (_link[LEFT]->isRed() || _link[RIGHT]->isRed()))
             {
-                debug(DEBUG, "Detected double RED, around key=%lld", _key);
+                if (_key.has_value())
+                {
+                    printf("Detected double RED, around key=%f", _key.value());
+                }
                 assert(0);
             }
 
@@ -495,7 +498,10 @@ private:
             int rCount = _link[RIGHT]->checkBalance();
             if (lCount != rCount)
             {
-                debug(DEBUG, "Detected broken balance, around key=%lld", _key);
+                if (_key.has_value())
+                {
+                    printf("Detected broken balance, around key=%f", _key.value());
+                }
                 assert(0);
             }
 
@@ -516,8 +522,8 @@ private:
                 strncat(header, space, sizeof(header) - 1);
             }
 
-            debug(DEBUG, "%s[%s:%lld %p]\n", header,
-                  (_color == RED ? "R" : "B"), _key, _obj);
+            printf("%s[%s:%f %p]\n", header,
+                  (_color == RED ? "R" : "B"), _key.value(), &_obj);
 
             if (_link[LEFT])
             {
@@ -535,13 +541,11 @@ private:
     }* _root;
 
     static RBTreeNode* nil ;
-    static bool DEBUG;
 
 #ifdef DEBUG
-    void dumpTree(std::string title)
+    void dumpTree(const std::string& title)
     {
-        debug(DEBUG, "======= %s ==============================================",
-              title.c_str());
+        printf("======= %s =============================================\n", title.c_str());
 
         if (_root)
         {
@@ -549,7 +553,7 @@ private:
         }
         else
         {
-            debug(true, " !! No tree");
+            printf("(!!) No tree\n");
         }
     }
 #endif
@@ -566,7 +570,7 @@ public:
         RBTreeNode* node = new RBTreeNode(key, p, this);
 
 #ifdef DEBUG
-        _dumpTree("Before insertion");
+        dumpTree("Before insertion");
 #endif
 
         if (_root)
@@ -584,7 +588,7 @@ public:
         }
 
 #ifdef DEBUG
-        _dumpTree("After insertion");
+        dumpTree("After insertion");
         _root->checkBalance();
 #endif
         return true;
@@ -603,25 +607,25 @@ public:
 
     bool remove(K key)
     {
-        if (nullptr == _root)
+        if (_root == nullptr)
         {
             return false;
         }
 
         RBTreeNode* node = _root->lookup(key);
-        if (nullptr == node)
+        if (node == nullptr)
         {
             return false;
         }
 
 #ifdef DEBUG
-        _dumpTree("Before removing");
+        dumpTree("Before removing");
 #endif
         node->leave();
         delete node;
 
 #ifdef DEBUG
-        _dumpTree("After removing");
+        dumpTree("After removing");
         _root->checkBalance();
 #endif
 
@@ -631,9 +635,6 @@ public:
 
 template <typename K, typename T>
 class RBTree<K,T>::RBTreeNode* RBTree<K,T>::nil = RBTreeNode::makeNil();
-
-template <typename K, typename T>
-bool RBTree<K,T>::DEBUG = true;
 
 
 #endif /* __RBTREE_H__ */

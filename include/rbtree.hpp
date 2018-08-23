@@ -7,15 +7,15 @@
  * suggested fix by Donghan Miao (github.com/miaodonghan).
  */
 
-
 #include <cassert>
 #include <string>
+#include <optional>
 
 #ifdef DEBUG
 #include "debug.h"
 #endif
 
-template<typename T> class RBTree
+template<typename K, typename T> class RBTree
 {
 private:
     class RBTreeNode
@@ -32,72 +32,74 @@ private:
             RIGHT = 1,
         };
 
-        RBTreeNode(long long k, T* o, RBTree* t) :
-            obj(o), key(k), color(RED), parent(NULL), tree(t)
+    private:
+        RBTreeNode() :
+            _obj(std::nullopt), _key(std::nullopt), _color(BLACK), _parent(nullptr), _tree(nullptr)
         {
-            this->link[LEFT]  = RBTree<T>::nil;
-            this->link[RIGHT] = RBTree<T>::nil;
 
-            if (NULL == o)
-            {
-                this->color = BLACK;
-                this->link[LEFT] = NULL;
-                this->link[RIGHT] = NULL;
-            }
+        }
+    public:
+        RBTreeNode(K k, const T& o, RBTree* t) :
+            _obj(std::make_optional<T>(o)), _key(k), _color(RED), _parent(nullptr), _tree(t)
+        {
+            _link[LEFT]  = RBTree<K,T>::nil;
+            _link[RIGHT] = RBTree<K,T>::nil;
         }
         ~RBTreeNode()
         {
-            if (this->link[LEFT]->isNil() == false)
+            if (_link[LEFT]->isNil() == false)
             {
-                delete this->link[LEFT];
+                delete _link[LEFT];
             }
-            if (this->link[RIGHT]->isNil() == false)
+            if (_link[RIGHT]->isNil() == false)
             {
-                delete this->link[RIGHT];
+                delete _link[RIGHT];
             }
+        }
+        static RBTreeNode* makeNil()
+        {
+            return new RBTreeNode();
         }
         inline bool isNil()
         {
-            return(this->obj == NULL);
+            return !_obj.has_value();
         }
         inline void swapColor(RBTreeNode& node)
         {
-            Color c = this->color;
-            this->color = node.color;
-            node.color = c;
+            std::swap(_color, node._color);
         }
-        inline T* getObj()
+        inline T& getObj()
         {
-            return this->obj;
+            return _obj;
         }
         inline void setBlack()
         {
-            this->color = BLACK;
+            _color = BLACK;
         }
         inline void setRed()
         {
-            this->color = RED;
+            _color = RED;
         }
         inline Color getColor()
         {
-            return this->color;
+            return _color;
         }
         inline bool isBlack()
         {
-            return(this->color == BLACK);
+            return(_color == BLACK);
         }
         inline bool isRed()
         {
-            return(this->color == RED);
+            return(_color == RED);
         }
 
         inline Side whichSide(RBTreeNode& node)
         {
-            if (this->link[LEFT] == &node)
+            if (_link[LEFT] == &node)
             {
                 return LEFT;
             }
-            else if (this->link[RIGHT] == &node)
+            else if (_link[RIGHT] == &node)
             {
                 return RIGHT;
             }
@@ -115,33 +117,33 @@ private:
 
         inline RBTreeNode* getBrother()
         {
-            if (this->parent == NULL)
+            if (_parent == nullptr)
             {
-                return NULL;
+                return nullptr;
             }
 
-            assert(this->parent->link[LEFT] == this ||
-                   this->parent->link[RIGHT] == this);
-            return(this->parent->link[LEFT] == this ?
-                   this->parent->link[RIGHT] : this->parent->link[LEFT]);
+            assert(_parent->_link[LEFT] == this ||
+                   _parent->_link[RIGHT] == this);
+            return(_parent->_link[LEFT] == this ?
+                   _parent->_link[RIGHT] : _parent->_link[LEFT]);
         }
 
-        inline void attach(RBTreeNode& node)
+        inline void attach(RBTreeNode* node)
         {
-            assert(this->key != node.key);
-            Side s =(node.key < this->key ? LEFT : RIGHT);
-            this->attach(s, node);
+            assert(_key != node->_key);
+            Side s =(node->key < _key ? LEFT : RIGHT);
+            _attach(s, node);
         }
 
-        inline void attach(Side s, RBTreeNode& node)
+        inline void attach(Side s, RBTreeNode* node)
         {
             assert(s == LEFT || s == RIGHT);
-            assert(this != &node);
-            assert(this->link[s]->isNil());
-            this->link[s] = &node;
-            if (! node.isNil())
+            assert(this != node);
+            assert(_link[s]->isNil());
+            _link[s] = node;
+            if (!node->isNil())
             {
-                node.parent = this;
+                node->_parent = this;
             }
         }
 
@@ -149,38 +151,38 @@ private:
         {
             assert(s == LEFT || s == RIGHT);
 
-            if (this->isNil() || this->link[s]->isNil())
+            if (isNil() || _link[s]->isNil())
             {
-                return RBTree<T>::nil;
+                return RBTree<K,T>::nil;
             }
 
-            RBTreeNode* node = this->link[s];
-            this->link[s]->parent = NULL;
-            this->link[s] = RBTree<T>::nil;
+            RBTreeNode* node = _link[s];
+            _link[s]->_parent = nullptr;
+            _link[s] = RBTree<K,T>::nil;
             return node;
         }
-        inline RBTreeNode* detach(RBTreeNode& node)
+        inline RBTreeNode* detach(RBTreeNode* node)
         {
-            if (this->link[RIGHT] == &node)
+            if (_link[RIGHT] == node)
             {
-                return this->detach(RIGHT);
+                return detach(RIGHT);
             }
-            else if (this->link[LEFT] == &node)
+            else if (_link[LEFT] == node)
             {
-                return this->detach(LEFT);
+                return detach(LEFT);
             }
             else
             {
                 assert(0);
             }
 
-            return NULL;
+            return nullptr;
         }
         inline RBTreeNode* searchMax()
         {
-            if (! this->link[RIGHT]->isNil())
+            if (! _link[RIGHT]->isNil())
             {
-                return this->link[RIGHT]->searchMax();
+                return _link[RIGHT]->searchMax();
             }
             else
             {
@@ -189,9 +191,9 @@ private:
         }
         inline RBTreeNode* searchMin()
         {
-            if (!this->link[LEFT]->isNil())
+            if (!_link[LEFT]->isNil())
             {
-                return this->link[LEFT]->searchMin();
+                return _link[LEFT]->searchMin();
             }
             else
             {
@@ -205,8 +207,8 @@ private:
             RBTreeNode* nGrand;   // New grand father
             Side r = otherSide(s);
 
-            nGrand = this->parent;
-            nParent = this->detach(r);
+            nGrand = _parent;
+            nParent = detach(r);
             assert(nParent);
 
             nLeaf = nParent->detach(s);
@@ -215,51 +217,51 @@ private:
             {
                 Side ps = nGrand->whichSide(*this);
                 nGrand->detach(ps);
-                nGrand->attach(ps, *nParent);
+                nGrand->attach(ps, nParent);
             }
             else
             {
-                this->tree->root = nParent;
+                _tree->_root = nParent;
             }
 
-            nParent->attach(s, *this);
+            nParent->attach(s, this);
 
-            if (! nLeaf->isNil())
+            if (!nLeaf->isNil())
             {
-                this->attach(r, *nLeaf);
+                attach(r, nLeaf);
             }
         }
 
         void adjustInsert()
         {
-            if (this->parent == NULL)
+            if (_parent == nullptr)
             {
                 // this node is root
-                this->setBlack();
+                setBlack();
                 return ;
             }
             else
             {
-                if (this->parent->isRed())
+                if (_parent->isRed())
                 {
-                    assert(this->parent->parent);
-                    assert(this->parent->parent->isBlack());
-                    RBTreeNode* cParent = this->parent;
-                    RBTreeNode* grand = this->parent->parent;
-                    RBTreeNode* uncle = this->parent->getBrother();
+                    assert(_parent->_parent);
+                    assert(_parent->_parent->isBlack());
+                    RBTreeNode* cParent = _parent;
+                    RBTreeNode* grand = _parent->_parent;
+                    RBTreeNode* uncle = _parent->getBrother();
                     Side s;
 
                     if (uncle->isRed())
                     {
                         uncle->setBlack();
-                        this->parent->setBlack();
+                        _parent->setBlack();
                         grand->setRed();
                         grand->adjustInsert();
                     }
                     else
                     {
-                        if (this->parent->whichSide(*this) !=
-                                grand->whichSide(*this->parent))
+                        if (_parent->whichSide(*this) !=
+                                grand->whichSide(*_parent))
                         {
                             s = otherSide(cParent->whichSide(*this));
                             cParent->rotate(s);
@@ -276,70 +278,70 @@ private:
             }
         }
 
-        bool insert(RBTreeNode& node)
+        bool insert(RBTreeNode* node)
         {
-            if (this->key == node.key)
+            if (_key == node->_key)
             {
                 // duplicated
                 return false;
             }
             else
             {
-                Side s =(node.key < this->key ? LEFT : RIGHT);
-                if (! this->link[s]->isNil())
+                Side s = (node->_key < _key ? LEFT : RIGHT);
+                if (! _link[s]->isNil())
                 {
-                    return this->link[s]->insert(node);
+                    return _link[s]->insert(node);
                 }
                 else
                 {
-                    this->attach(s, node);
+                    attach(s, node);
                 }
             }
 
-            node.adjustInsert();
+            node->adjustInsert();
             return true;
         }
 
-        RBTreeNode* lookup(long long k)
+        RBTreeNode* lookup(K k)
         {
-            if (this->key == k)
+            if (_key == k)
             {
                 return this;
             }
             else
             {
-                Side s =(k < this->key ? LEFT : RIGHT);
-                return(this->link[s]->isNil() ? NULL : this->link[s]->lookup(k));
+                Side s =(k < _key ? LEFT : RIGHT);
+                return(_link[s]->isNil() ? nullptr : _link[s]->lookup(k));
             }
         }
 
         void leave()
         {
             // only detach from tree, balancing color & tree in adjustLeave()
-            RBTreeNode* cParent = this->parent;
+            RBTreeNode* cParent = _parent;
 
-            if (this->link[LEFT]->isNil() && this->link[RIGHT]->isNil())
+            if (_link[LEFT]->isNil() && _link[RIGHT]->isNil())
             {
                 if (cParent)
                 {
                     Side s = cParent->whichSide(*this);
                     cParent->detach(*this);
 
-                    if (this->isBlack())
+                    if (isBlack())
                     {
                         cParent->link[s]->adjustLeave(cParent);
                     }
                 }
                 else
                 {
-                    this->tree->root = NULL;
+                    _tree->root = nullptr;
                 }
             }
-            else if ((this->link[LEFT]->isNil()) ^
-                     (this->link[RIGHT]->isNil()))
+            else if ((_link[LEFT]->isNil()) ^
+                     (_link[RIGHT]->isNil()))
             {
-                Side s =(this->link[LEFT]->isNil() ? RIGHT : LEFT);
-                RBTreeNode* cTarget = this->detach(s);
+                Side s =(_link[LEFT]->isNil() ? RIGHT : LEFT);
+                RBTreeNode* cTarget = _detach(s);
 
                 if (cParent)
                 {
@@ -348,10 +350,10 @@ private:
                 }
                 else
                 {
-                    this->tree->root = cTarget;
+                    _tree->root = cTarget;
                 }
 
-                if (this->isBlack())
+                if (isBlack())
                 {
                     cTarget->adjustLeave(cParent);
                 }
@@ -359,23 +361,23 @@ private:
             else
             {
                 // swap target node & maximum node in left subtree
-                assert(! this->link[LEFT]->isNil() &&
-                       ! this->link[RIGHT]->isNil());
+                assert(! _link[LEFT]->isNil() &&
+                       ! _link[RIGHT]->isNil());
 
-                RBTreeNode* cMax = this->link[LEFT]->searchMax();
+                RBTreeNode* cMax = _link[LEFT]->searchMax();
                 RBTreeNode* mParent = cMax->parent;
-                RBTreeNode* cLeft  = this->detach(LEFT);
-                RBTreeNode* cRight = this->detach(RIGHT);
+                RBTreeNode* cLeft  = _detach(LEFT);
+                RBTreeNode* cRight = _detach(RIGHT);
                 RBTreeNode* mLeft  = cMax->detach(LEFT);
 
-                this->attach(*mLeft);
+                _attach(*mLeft);
                 if (cParent)
                 {
                     cParent->detach(*this);
                 }
                 else
                 {
-                    this->tree->root = NULL;
+                    _tree->root = nullptr;
                 }
 
                 if (cMax != cLeft)
@@ -400,25 +402,25 @@ private:
                 }
                 else
                 {
-                    this->tree->root = cMax;
+                    _tree->root = cMax;
                 }
 
-                this->swapColor(*cMax);
-                this->leave();
+                swapColor(*cMax);
+                leave();
             }
         }
 
         void adjustLeave(RBTreeNode* cParent)
         {
             // nothing to do when node is root
-            if (NULL == cParent)
+            if (nullptr == cParent)
             {
-                this->setBlack();
+                setBlack();
                 return ;
             }
-            if (this->isRed())
+            if (isRed())
             {
-                this->setBlack();
+                setBlack();
                 return ;
             }
 
@@ -477,36 +479,36 @@ private:
 #ifdef DEBUG
         int checkBalance()
         {
-            if (this->isNil())
+            if (isNil())
             {
                 return 1;
             }
 
-            if (this->isRed() &&
-                    (this->link[LEFT]->isRed() || this->link[RIGHT]->isRed()))
+            if (isRed() &&
+                    (_link[LEFT]->isRed() || _link[RIGHT]->isRed()))
             {
-                debug(DEBUG, "Detected double RED, around key=%lld", this->key);
+                debug(DEBUG, "Detected double RED, around key=%lld", _key);
                 assert(0);
             }
 
-            int lCount = this->link[LEFT]->checkBalance();
-            int rCount = this->link[RIGHT]->checkBalance();
+            int lCount = _link[LEFT]->checkBalance();
+            int rCount = _link[RIGHT]->checkBalance();
             if (lCount != rCount)
             {
-                debug(DEBUG, "Detected broken balance, around key=%lld", this->key);
+                debug(DEBUG, "Detected broken balance, around key=%lld", _key);
                 assert(0);
             }
 
-            return(this->isBlack() ? rCount + 1 : rCount);
+            return(isBlack() ? rCount + 1 : rCount);
         }
 
         void printNode(int depth)
         {
             char space[] = "     ";
             char header[0x1000] = "";
-            if (this->link[RIGHT])
+            if (_link[RIGHT])
             {
-                this->link[RIGHT]->printNode(depth + 1);
+                _link[RIGHT]->printNode(depth + 1);
             }
 
             for (int i = 0; i < depth ; i++)
@@ -515,22 +517,22 @@ private:
             }
 
             debug(DEBUG, "%s[%s:%lld %p]\n", header,
-                  (this->color == RED ? "R" : "B"), this->key, this->obj);
+                  (_color == RED ? "R" : "B"), _key, _obj);
 
-            if (this->link[LEFT])
+            if (_link[LEFT])
             {
-                this->link[LEFT]->printNode(depth + 1);
+                _link[LEFT]->printNode(depth + 1);
             }
         }
 #endif
 
     private:
-        T* obj;
-        long long key;
-        Color color;
-        RBTreeNode* parent, * link[2];
-        RBTree* tree;
-    }* root;
+        std::optional<T> _obj;
+        std::optional<K> _key;
+        Color _color;
+        RBTreeNode* _parent,* _link[2];
+        RBTree* _tree;
+    }* _root;
 
     static RBTreeNode* nil ;
     static bool DEBUG;
@@ -541,9 +543,9 @@ private:
         debug(DEBUG, "======= %s ==============================================",
               title.c_str());
 
-        if (this->root)
+        if (_root)
         {
-            this->root->printNode(0);
+            _root->printNode(0);
         }
         else
         {
@@ -553,25 +555,23 @@ private:
 #endif
 
 public:
-    RBTree() : root(NULL) {}
+    RBTree() : _root(nullptr) {}
     ~RBTree()
     {
-        delete this->root;
+        delete _root;
     }
 
-    bool insert(long long key, T* p)
+    bool insert(K key, T p)
     {
         RBTreeNode* node = new RBTreeNode(key, p, this);
 
-        assert(key >= 0);
-
 #ifdef DEBUG
-        this->dumpTree("Before insertion");
+        _dumpTree("Before insertion");
 #endif
 
-        if (this->root)
+        if (_root)
         {
-            if (! this->root->insert(*node))
+            if (!_root->insert(node))
             {
                 delete node;
                 return false;
@@ -579,58 +579,61 @@ public:
         }
         else
         {
-            this->root = node;
+            _root = node;
             node->setBlack();
         }
 
 #ifdef DEBUG
-        this->dumpTree("After insertion");
-        this->root->checkBalance();
+        _dumpTree("After insertion");
+        _root->checkBalance();
 #endif
         return true;
     }
 
-    T* lookup(long long key)
+    T& lookup(K key)
     {
-        if (NULL == this->root)
+        if (nullptr == _root)
         {
-            return NULL;
+            return nullptr;
         }
 
-        RBTreeNode* node = this->root->lookup(key);
-        return(node ? node->getObj() : NULL);
+        RBTreeNode* node = _root->lookup(key);
+        return(node ? node->getObj() : nullptr);
     }
 
-    bool remove(long long key)
+    bool remove(K key)
     {
-        if (NULL == this->root)
+        if (nullptr == _root)
         {
             return false;
         }
 
-        RBTreeNode* node = this->root->lookup(key);
-        if (NULL == node)
+        RBTreeNode* node = _root->lookup(key);
+        if (nullptr == node)
         {
             return false;
         }
 
 #ifdef DEBUG
-        this->dumpTree("Before removing");
+        _dumpTree("Before removing");
 #endif
         node->leave();
         delete node;
 
 #ifdef DEBUG
-        this->dumpTree("After removing");
-        this->root->checkBalance();
+        _dumpTree("After removing");
+        _root->checkBalance();
 #endif
 
         return true;
     }
 };
 
-template <typename T> class RBTree<T>::RBTreeNode* RBTree<T>::nil = new RBTreeNode(-1,0,0);
-template <typename T> bool RBTree<T>::DEBUG = true;
+template <typename K, typename T>
+class RBTree<K,T>::RBTreeNode* RBTree<K,T>::nil = RBTreeNode::makeNil();
+
+template <typename K, typename T>
+bool RBTree<K,T>::DEBUG = true;
 
 
 #endif /* __RBTREE_H__ */

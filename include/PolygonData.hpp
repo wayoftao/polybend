@@ -8,7 +8,7 @@
 struct PolygonData
 {
     std::vector<Vertex> points;
-    std::vector<glm::vec2> mesh;
+    std::vector<int> mesh;
     // TODO: Mesh
 };
 

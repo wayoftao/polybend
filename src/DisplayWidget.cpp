@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Triangulator.hpp"
 #include "xorwow.hpp"
 
 DisplayWidget::DisplayWidget(QWidget* parent)
@@ -202,17 +203,16 @@ void DisplayWidget::mousePressEvent(QMouseEvent* event)
 
     case Qt::RightButton:
         {
-            if (!_currentPolygon.empty() && _om)
+            if (_currentPolygon.size() >= 3 && _om)
             {
                 auto data = _om->getData();
                 std::vector<glm::vec2> input(_currentPolygon.size());
-                std::vector<glm::vec2> mesh;
                 for (const auto& v : _currentPolygon)
                 {
                     input.push_back(v.position);
                 }
-                Triangulate::process(input, mesh);
-                data->polygons.push_back(PolygonData{_currentPolygon, mesh}); // CHECK MOVE SEMANTICS
+                auto mesh = Triangulator::triangulate(input);
+                data->polygons.push_back(PolygonData{_currentPolygon, mesh}); // TODO: CHECK MOVE SEMANTICS
                 nextColor();
                 _currentPolygon.clear();
                 updatePolygons();

@@ -8,7 +8,6 @@
 #include "PrimitiveData.hpp"
 #include "GLData.hpp"
 #include "Vertex.hpp"
-#include "triangulate.hpp"
 
 class DisplayWidget : public QOpenGLWidget
 {

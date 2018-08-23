@@ -8,12 +8,14 @@
 #include <QOpenGLShader>
 #include <QOpenGLShaderProgram>
 
+#include "StringMap.hpp"
+
 struct GLData
 {
-	std::unordered_map<std::string, QOpenGLShaderProgram*> shaderPrograms;
-	std::unordered_map<std::string, QOpenGLShader*> shaders;
-	std::unordered_map<std::string, QOpenGLVertexArrayObject*> VAOs;
-	std::unordered_map<std::string, QOpenGLBuffer*> VBOs;
+    StringMap<QOpenGLShaderProgram*>  shaderPrograms;
+    StringMap<QOpenGLShader*>         shaders;
+    StringMap<QOpenGLVertexArrayObject*>  VAOs;
+    StringMap<QOpenGLBuffer*>             VBOs;
 };
 
 #endif // GLDATA_HPP

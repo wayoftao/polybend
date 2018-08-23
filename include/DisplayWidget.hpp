@@ -12,30 +12,33 @@
 class DisplayWidget : public QOpenGLWidget
 {
     Q_OBJECT
-    public:
-        DisplayWidget(QWidget* parent);
+public:
+    DisplayWidget(QWidget* parent);
 
-        void initializeGL() Q_DECL_OVERRIDE;
-        void resizeGL(int w, int h) Q_DECL_OVERRIDE;
-        void paintGL() Q_DECL_OVERRIDE;
+    void initializeGL() Q_DECL_OVERRIDE;
+    void resizeGL(int w, int h) Q_DECL_OVERRIDE;
+    void paintGL() Q_DECL_OVERRIDE;
 
-        void setObjectManager(ObjectManager* om) { _om = om; }
-        void updatePolygons();
-        void updatePoints();
+    void setObjectManager(ObjectManager* om)
+    {
+        _om = om;
+    }
+    void updatePolygons();
+    void updatePoints();
 
-    protected:
-        void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+protected:
+    void mousePressEvent(QMouseEvent* event) Q_DECL_OVERRIDE;
 
-	private:
-        void nextColor();
+private:
+    void nextColor();
 
-		GLData _glData;
-        std::vector<Vertex> _currentPolygon;
-        ObjectManager* _om;
-        uint32_t _randState[5];
-        glm::vec3 _currentColor;
-        unsigned int _width;
-        unsigned int _height;
+    GLData              _glData;
+    std::vector<Vertex> _currentPolygon;
+    ObjectManager*      _om;
+    uint32_t            _randState[5];
+    glm::vec3           _currentColor;
+    unsigned int        _width;
+    unsigned int        _height;
 };
 
 #endif

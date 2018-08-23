@@ -11,7 +11,7 @@
 #include "xorwow.hpp"
 
 DisplayWidget::DisplayWidget(QWidget* parent)
-    : QOpenGLWidget(parent)
+	: QOpenGLWidget(parent)
     , _om(nullptr)
     , _randState{3256, 3542, 23457, 2102030, 2}
 {
@@ -21,9 +21,9 @@ void DisplayWidget::initializeGL()
 {
     nextColor();
 
-    auto* f = QOpenGLContext::currentContext()->functions();
+	auto* f = QOpenGLContext::currentContext()->functions();
 
-    // Initialize buffers and shaders
+	// Initialize buffers and shaders
 
     // SHADER
     auto* prog = new QOpenGLShaderProgram(this);
@@ -82,8 +82,8 @@ void DisplayWidget::resizeGL(int w, int h)
 {
     std::cout << "DisplayWidget::resizeGL()" << std::endl;
 
-    auto* f = QOpenGLContext::currentContext()->functions();
-    f->glViewport(0, 0, w, h);
+	auto* f = QOpenGLContext::currentContext()->functions();
+	f->glViewport(0, 0, w, h);
     _width = w;
     _height = h;
 }
@@ -92,8 +92,8 @@ void DisplayWidget::paintGL()
 {
     std::cout << "DisplayWidget::paintGL()" << std::endl;
 
-    auto* f = QOpenGLContext::currentContext()->functions();
-    f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	auto* f = QOpenGLContext::currentContext()->functions();
+	f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     auto* prog = _glData.shaderPrograms["default"];
     prog->bind();
@@ -136,7 +136,7 @@ void DisplayWidget::updatePolygons()
         return;
     }
 
-    // Fill buffer
+	// Fill buffer
     auto data = _om->getData();
 
     size_t totalSize = 0;
@@ -186,41 +186,41 @@ void DisplayWidget::mousePressEvent(QMouseEvent* event)
     switch (event->button())
     {
     case Qt::LeftButton:
-    {
-        const auto& pos = event->localPos();
-        Vertex v;
-        v.position = {(float)pos.x(), (float)pos.y()};
-        v.color = _currentColor;
-        _currentPolygon.push_back(v);
-
-        std::cout << "currentPolygon:" << std::endl;
-        for (const auto& w : _currentPolygon)
         {
-            std::cout << w.position.x << ", " << w.position.y << std::endl;
-        }
-        updatePoints();
-    }
-    break;
+            const auto& pos = event->localPos();
+            Vertex v;
+            v.position = {(float)pos.x(), (float)pos.y()};
+            v.color = _currentColor;
+            _currentPolygon.push_back(v);
 
-    case Qt::RightButton:
-    {
-        if (_currentPolygon.size() >= 3 && _om != nullptr)
-        {
-            auto data = _om->getData();
-            std::vector<glm::vec2> input(_currentPolygon.size());
-            for (const auto& v : _currentPolygon)
+            std::cout << "currentPolygon:" << std::endl;
+            for (const auto& w : _currentPolygon)
             {
-                input.push_back(v.position);
+                std::cout << w.position.x << ", " << w.position.y << std::endl;
             }
-            auto mesh = Triangulator::triangulate(input);
-            data->polygons.push_back({_currentPolygon, mesh});
-            nextColor();
-            _currentPolygon.clear();
-            updatePolygons();
             updatePoints();
         }
-    }
-    break;
+        break;
+
+    case Qt::RightButton:
+        {
+            if (_currentPolygon.size() >= 3 && _om != nullptr)
+            {
+                auto data = _om->getData();
+                std::vector<glm::vec2> input(_currentPolygon.size());
+                for (const auto& v : _currentPolygon)
+                {
+                    input.push_back(v.position);
+                }
+                auto mesh = Triangulator::triangulate(input);
+                data->polygons.push_back({_currentPolygon, mesh});
+                nextColor();
+                _currentPolygon.clear();
+                updatePolygons();
+                updatePoints();
+            }
+        }
+        break;
 
     default:
         break;

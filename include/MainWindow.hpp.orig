@@ -9,11 +9,11 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    MainWindow(ObjectManager* om);
+        MainWindow(ObjectManager* om);
 
 private:
-    Ui::MainWindow _ui;
-    ObjectManager* _om;
+        Ui::MainWindow _ui;
+        ObjectManager* _om;
 };
 
 #endif
